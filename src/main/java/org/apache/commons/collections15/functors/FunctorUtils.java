@@ -20,6 +20,8 @@ import org.apache.commons.collections15.Closure;
 import org.apache.commons.collections15.Predicate;
 import org.apache.commons.collections15.Transformer;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -31,6 +33,10 @@ import java.util.Iterator;
  * @since Commons Collections 3.0
  */
 class FunctorUtils {
+
+    /** System property key to enable unsafe serialization */
+    final static String UNSAFE_SERIALIZABLE_PROPERTY
+        = "org.apache.commons.collections.enableUnsafeSerialization";
 
     /**
      * Restricted constructor.
@@ -168,6 +174,35 @@ class FunctorUtils {
             if (transformers[i] == null) {
                 throw new IllegalArgumentException("The transformer array must not contain a null transformer, index " + i + " was null");
             }
+        }
+    }
+
+    /**
+     * Package-private helper method to check if serialization support is
+     * enabled for unsafe classes.
+     *
+     * @param clazz  the clazz to check for serialization support
+     * @throws UnsupportedOperationException if unsafe serialization is disabled
+     */
+    static void checkUnsafeSerialization(Class clazz) {
+        String unsafeSerializableProperty;
+
+        try {
+            unsafeSerializableProperty =
+                (String) AccessController.doPrivileged(new PrivilegedAction() {
+                    public Object run() {
+                        return System.getProperty(UNSAFE_SERIALIZABLE_PROPERTY);
+                    }
+                });
+        } catch (SecurityException ex) {
+            unsafeSerializableProperty = null;
+        }
+
+        if (!"true".equalsIgnoreCase(unsafeSerializableProperty)) {
+            throw new UnsupportedOperationException(
+                    "Serialization support for " + clazz.getName() + " is disabled for security reasons. " +
+                    "To enable it set system property '" + UNSAFE_SERIALIZABLE_PROPERTY + "' to 'true', " +
+                    "but you must ensure that your application does not de-serialize objects from untrusted sources.");
         }
     }
 

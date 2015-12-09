@@ -19,12 +19,26 @@ package org.apache.commons.collections15.functors;
 import org.apache.commons.collections15.Factory;
 import org.apache.commons.collections15.FunctorException;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 /**
  * Factory implementation that creates a new object instance by reflection.
+ *
+ * <p>
+ * <b>WARNING:</b> from v3.2.2 onwards this class will throw an
+ * {@link UnsupportedOperationException} when trying to serialize or
+ * de-serialize an instance to prevent potential remote code execution exploits.
+ * <p>
+ * In order to re-enable serialization support for {@code InstantiateTransformer}
+ * the following system property can be used (via -Dproperty=true):
+ * <pre>
+ * org.apache.commons.collections.enableUnsafeSerialization
+ * </pre>
  *
  * @author Matt Hall, John Watkinson, Stephen Colebourne
  * @version $Revision: 1.1 $ $Date: 2005/10/11 17:05:24 $
@@ -144,4 +158,21 @@ public class InstantiateFactory <T> implements Factory<T>, Serializable {
         }
     }
 
+    /**
+     * Overrides the default writeObject implementation to prevent
+     * serialization (see COLLECTIONS-580).
+     */
+    private void writeObject(ObjectOutputStream os) throws IOException {
+        FunctorUtils.checkUnsafeSerialization(InstantiateFactory.class);
+        os.defaultWriteObject();
+    }
+
+    /**
+     * Overrides the default readObject implementation to prevent
+     * de-serialization (see COLLECTIONS-580).
+     */
+    private void readObject(ObjectInputStream is) throws ClassNotFoundException, IOException {
+        FunctorUtils.checkUnsafeSerialization(InstantiateFactory.class);
+        is.defaultReadObject();
+    }
 }

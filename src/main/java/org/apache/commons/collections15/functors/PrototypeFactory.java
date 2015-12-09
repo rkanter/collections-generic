@@ -26,6 +26,17 @@ import java.lang.reflect.Method;
 /**
  * Factory implementation that creates a new instance each time based on a prototype.
  *
+ * <p>
+ * <b>WARNING:</b> from v3.2.2 onwards this method will return a {@code Factory}
+ * that will throw an {@link UnsupportedOperationException} when trying to serialize
+ * or de-serialize it to prevent potential remote code execution exploits.
+ * <p>
+ * In order to re-enable serialization support the following system property
+ * can be used (via -Dproperty=true):
+ * <pre>
+ * org.apache.commons.collections.enableUnsafeSerialization
+ * </pre>
+ *
  * @author Matt Hall, John Watkinson, Stephen Colebourne
  * @version $Revision: 1.1 $ $Date: 2005/10/11 17:05:24 $
  * @since Commons Collections 3.0
@@ -141,6 +152,24 @@ public class PrototypeFactory <T> {
                 throw new FunctorException("PrototypeCloneFactory: Clone method threw an exception", ex);
             }
         }
+
+        /**
+         * Overrides the default writeObject implementation to prevent
+         * serialization (see COLLECTIONS-580).
+         */
+        private void writeObject(ObjectOutputStream os) throws IOException {
+            FunctorUtils.checkUnsafeSerialization(PrototypeCloneFactory.class);
+            os.defaultWriteObject();
+        }
+
+        /**
+         * Overrides the default readObject implementation to prevent
+         * de-serialization (see COLLECTIONS-580).
+         */
+        private void readObject(ObjectInputStream is) throws ClassNotFoundException, IOException {
+            FunctorUtils.checkUnsafeSerialization(PrototypeCloneFactory.class);
+            is.defaultReadObject();
+        }
     }
 
     // PrototypeSerializationFactory
@@ -204,6 +233,24 @@ public class PrototypeFactory <T> {
                     // ignore
                 }
             }
+        }
+
+        /**
+         * Overrides the default writeObject implementation to prevent
+         * serialization (see COLLECTIONS-580).
+         */
+        private void writeObject(ObjectOutputStream os) throws IOException {
+            FunctorUtils.checkUnsafeSerialization(PrototypeSerializationFactory.class);
+            os.defaultWriteObject();
+        }
+
+        /**
+         * Overrides the default readObject implementation to prevent
+         * de-serialization (see COLLECTIONS-580).
+         */
+        private void readObject(ObjectInputStream is) throws ClassNotFoundException, IOException {
+            FunctorUtils.checkUnsafeSerialization(PrototypeSerializationFactory.class);
+            is.defaultReadObject();
         }
     }
 

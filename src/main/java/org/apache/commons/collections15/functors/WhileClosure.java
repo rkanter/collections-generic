@@ -19,11 +19,25 @@ package org.apache.commons.collections15.functors;
 import org.apache.commons.collections15.Closure;
 import org.apache.commons.collections15.Predicate;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 /**
  * Closure implementation that executes a closure repeatedly until a condition is met,
  * like a do-while or while loop.
+ *
+ * <p>
+ * <b>WARNING:</b> from v3.2.2 onwards this class will throw an
+ * {@link UnsupportedOperationException} when trying to serialize or
+ * de-serialize an instance to prevent potential remote code execution exploits.
+ * <p>
+ * In order to re-enable serialization support for {@code WhileClosure}
+ * the following system property can be used (via -Dproperty=true):
+ * <pre>
+ * org.apache.commons.collections.enableUnsafeSerialization
+ * </pre>
  *
  * @author Matt Hall, John Watkinson, Stephen Colebourne
  * @version $Revision: 1.1 $ $Date: 2005/10/11 17:05:24 $
@@ -125,6 +139,24 @@ public class WhileClosure <T> implements Closure<T>, Serializable {
      */
     public boolean isDoLoop() {
         return iDoLoop;
+    }
+
+    /**
+     * Overrides the default writeObject implementation to prevent
+     * serialization (see COLLECTIONS-580).
+     */
+    private void writeObject(ObjectOutputStream os) throws IOException {
+        FunctorUtils.checkUnsafeSerialization(WhileClosure.class);
+        os.defaultWriteObject();
+    }
+
+    /**
+     * Overrides the default readObject implementation to prevent
+     * de-serialization (see COLLECTIONS-580).
+     */
+    private void readObject(ObjectInputStream is) throws ClassNotFoundException, IOException {
+        FunctorUtils.checkUnsafeSerialization(WhileClosure.class);
+        is.defaultReadObject();
     }
 
 }
